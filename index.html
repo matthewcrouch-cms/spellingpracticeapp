@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spelling Quest</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%8F%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Spelling Quest">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --display:"Cinzel",Georgia,"Times New Roman",serif;
+  --letters:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --sky:#d9e6f6; --paper:#eef3f9; --rule:#d7e3f2; --card:#ffffff; --ink:#14224a; --muted:#53628a; --line:#cbd6e9;
+  --tile:#f0c14b; --tile-edge:#b8851a; --tile-ink:#2a1c05;
+  --brand:#1e4aa8; --brand-edge:#12306b; --brand-ink:#ffffff;
+  --good:#1c7a4d; --good-bg:#def3e8; --bad:#b0332a; --bad-bg:#fbe7e4; --mark:#ffe08a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky:#14224f; --paper:#0a1330; --rule:#18254a; --card:#142049; --ink:#eef2ff; --muted:#a6b3d9; --line:#2b3a6b;
+    --tile:#f0c14b; --tile-edge:#a87612; --tile-ink:#2a1c05;
+    --brand:#7da2ff; --brand-edge:#4a6fd0; --brand-ink:#0a1330;
+    --good:#63e0a8; --good-bg:#123a2c; --bad:#ff9a8f; --bad-bg:#40201d; --mark:#6b5a12;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#14224f; --paper:#0a1330; --rule:#18254a; --card:#142049; --ink:#eef2ff; --muted:#a6b3d9; --line:#2b3a6b;
+  --tile:#f0c14b; --tile-edge:#a87612; --tile-ink:#2a1c05;
+  --brand:#7da2ff; --brand-edge:#4a6fd0; --brand-ink:#0a1330;
+  --good:#63e0a8; --good-bg:#123a2c; --bad:#ff9a8f; --bad-bg:#40201d; --mark:#6b5a12;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(to bottom, var(--sky) 0, var(--paper) 360px);
+  font-family:var(--letters);
+  font-size:18px; line-height:1.5; min-height:100vh;
+}
+h1,h2,h3,.display{font-family:var(--display); letter-spacing:.02em}
+.app{max-width:760px; margin:0 auto; padding:20px 16px 56px}
+[hidden]{display:none !important}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--brand); outline-offset:2px}
+
+/* hero */
+.hero{display:flex; align-items:flex-end; gap:14px; margin:6px 0 18px; flex-wrap:wrap}
+.hero h1{font-size:clamp(30px,8vw,50px); line-height:1; margin:0; font-weight:700}
+.hero p{margin:0 0 6px; color:var(--muted); font-size:19px}
+.logo-tiles{display:flex; gap:5px}
+.logo-tiles span{
+  width:36px; height:42px; display:grid; place-items:center; border-radius:9px;
+  background:var(--tile); color:var(--tile-ink); border-bottom:4px solid var(--tile-edge);
+  font-family:var(--display); font-weight:700; font-size:26px;
+}
+.logo-tiles span:nth-child(odd){transform:rotate(-4deg)}
+.logo-tiles span:nth-child(even){transform:rotate(3deg)}
+
+.stats{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px}
+.stat{background:var(--card); border:2px solid var(--line); border-radius:14px; padding:8px 14px; display:flex; align-items:baseline; gap:8px}
+.stat b{font-family:var(--letters); font-size:26px; font-weight:600}
+.stat span{color:var(--muted); font-size:15px}
+.ghost{background:transparent; border:2px solid var(--line); border-radius:14px; padding:8px 14px; color:var(--muted); font-size:15px}
+.ghost:hover{border-color:var(--brand); color:var(--ink)}
+
+h2{font-size:24px; margin:28px 0 10px; font-weight:600}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px}
+.pick{
+  text-align:left; background:var(--card); border:2px solid var(--line); border-radius:16px; padding:14px 16px;
+  display:flex; flex-direction:column; gap:2px; transition:border-color .12s, transform .12s;
+}
+.pick:hover{border-color:var(--brand)}
+.pick[aria-pressed="true"]{border-color:var(--brand); box-shadow:0 0 0 3px var(--brand) inset}
+.pick .t{font-family:var(--display); font-size:21px; font-weight:600}
+.pick .d{color:var(--muted); font-size:16px; line-height:1.35}
+.pick .n{color:var(--muted); font-size:14px; margin-top:4px}
+
+.btn{
+  border:0; border-radius:14px; padding:12px 22px; font-family:var(--letters); font-weight:600; font-size:20px;
+  background:var(--brand); color:var(--brand-ink); border-bottom:5px solid var(--brand-edge);
+}
+.btn:active{transform:translateY(2px); border-bottom-width:3px}
+.btn.big{width:100%; padding:16px 22px; font-size:24px; margin-top:22px}
+.btn.alt{background:var(--card); color:var(--ink); border:2px solid var(--line); border-bottom:5px solid var(--line)}
+.btn.small{padding:8px 14px; font-size:17px; border-bottom-width:4px}
+.msg{min-height:26px; margin:8px 2px 0; color:var(--bad); font-size:16px}
+
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{background:var(--card); border:2px solid var(--line); border-radius:999px; padding:3px 12px; font-size:16px; display:flex; gap:8px; align-items:center}
+.chip i{font-style:normal; letter-spacing:2px; color:var(--tile-edge); font-size:13px}
+.chip.m3{border-color:var(--good); background:var(--good-bg)}
+.chip.m3 i{color:var(--good)}
+.legend{color:var(--muted); font-size:15px; margin:10px 2px 0}
+
+details{background:var(--card); border:2px solid var(--line); border-radius:16px; padding:12px 16px; margin-top:26px}
+summary{cursor:pointer; font-family:var(--display); font-size:21px; font-weight:600}
+details p{color:var(--muted); font-size:16px; margin:8px 0}
+textarea{
+  width:100%; min-height:150px; border:2px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--paper); color:var(--ink);
+  font:inherit; font-size:17px; resize:vertical;
+}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px}
+.link{background:none; border:0; color:var(--muted); text-decoration:underline; font-size:15px; padding:6px 2px}
+
+/* play */
+.topbar{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+.topbar .grow{flex:1}
+.progress{height:12px; background:var(--card); border:2px solid var(--line); border-radius:999px; overflow:hidden; margin-top:6px}
+.progress div{height:100%; background:var(--brand); width:0; transition:width .25s}
+.plabel{font-size:16px; color:var(--muted)}
+.score{font-family:var(--display); font-size:22px; font-weight:600}
+.board{background:var(--card); border:2px solid var(--line); border-radius:22px; padding:20px 18px 22px}
+.audio{display:flex; gap:10px; flex-wrap:wrap}
+.clue{margin:16px 0 4px; font-size:20px; line-height:1.5; color:var(--ink); min-height:30px}
+.clue .blank{display:inline-block; min-width:70px; border-bottom:3px solid var(--tile-edge); margin:0 3px}
+.hintline{min-height:26px; color:var(--muted); font-size:17px}
+.pattern{font-family:var(--letters); font-size:clamp(30px,8vw,46px); letter-spacing:.14em; text-align:center; margin:14px 0 6px; font-weight:600}
+.answer{
+  width:100%; font:inherit; font-family:var(--letters); font-size:clamp(30px,8vw,44px); font-weight:600; text-align:center;
+  background:transparent; color:var(--ink); border:0; border-bottom:4px solid var(--ink); border-radius:0; padding:8px 4px; margin-top:8px;
+}
+.answer:focus{outline:none; border-bottom-color:var(--brand)}
+.answer::placeholder{color:var(--line)}
+.slots{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:16px 0 14px; min-height:64px}
+.slot{width:44px; height:54px; border-bottom:4px solid var(--ink); display:grid; place-items:center; font-family:var(--letters); font-size:34px; font-weight:600}
+.pool{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:8px}
+.tile{
+  width:50px; height:58px; border:0; border-radius:11px; background:var(--tile); color:var(--tile-ink); border-bottom:5px solid var(--tile-edge);
+  font-family:var(--letters); font-weight:700; font-size:30px; display:grid; place-items:center;
+}
+.tile:active{transform:translateY(2px); border-bottom-width:3px}
+.tile.used{background:transparent; border:2px dashed var(--line); border-bottom-width:2px; color:transparent; cursor:default}
+.actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:16px}
+.fb{margin-top:18px; border-radius:14px; padding:0}
+.fb.good,.fb.bad{padding:14px 16px}
+.fb.good{background:var(--good-bg); color:var(--ink); border:2px solid var(--good)}
+.fb.bad{background:var(--bad-bg); color:var(--ink); border:2px solid var(--bad)}
+.fbTitle{font-family:var(--display); font-size:24px; font-weight:600}
+.fb.good .fbTitle{color:var(--good)} .fb.bad .fbTitle{color:var(--bad)}
+.fb .sent{margin-top:4px; font-size:17px}
+.word-row{display:flex; align-items:center; gap:10px; margin:8px 0; flex-wrap:wrap}
+.word-row .lab{width:92px; font-size:15px; color:var(--muted)}
+.letters{font-family:var(--letters); font-size:30px; font-weight:600; letter-spacing:.08em}
+.letters .off{color:var(--bad); text-decoration:line-through; text-decoration-thickness:3px}
+.letters .fix{background:var(--mark); border-radius:6px; padding:0 3px; text-decoration:underline; text-decoration-thickness:3px}
+.copyhint{margin-top:10px; font-size:18px; font-weight:700}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+@media (prefers-reduced-motion: reduce){ .shake{animation:none} .progress div{transition:none} }
+
+.keyband{height:14px; margin:4px 0 6px; background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='14'%20viewBox='0%200%2024%2014'%20fill='none'%20stroke='%23b8851a'%20stroke-width='2'%20stroke-linejoin='miter'%3E%3Cpath%20d='M1%2012V2H17V10H7V6H12M17%2012H24'/%3E%3C/svg%3E") repeat-x left center}
+.rank{margin-top:12px; background:var(--card); border:2px solid var(--line); border-left:6px solid var(--tile-edge); border-radius:18px; padding:12px 16px}
+.rank-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
+.rank-name{font-family:var(--display); font-size:26px; font-weight:700; line-height:1.2}
+.rank .progress{margin-top:8px}
+.rank .progress div{background:var(--tile)}
+.mini{display:block; height:8px; border-radius:999px; background:var(--paper); border:2px solid var(--line); overflow:hidden; margin-top:6px}
+.mini i{display:block; height:100%; background:var(--tile-edge)}
+.rankup{display:inline-block; margin-top:12px; padding:8px 18px; border-radius:14px; background:var(--tile); color:var(--tile-ink); border-bottom:5px solid var(--tile-edge); font-family:var(--display); font-weight:700; font-size:22px}
+/* week tracker */
+.week{background:var(--card); border:2px solid var(--line); border-radius:18px; padding:14px 16px; margin-top:14px}
+.week-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
+.week-head h3{margin:0; font-size:22px; font-weight:600}
+.days{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:12px 0 10px}
+.dday{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:14px; color:var(--muted)}
+.dmark{width:100%; max-width:54px; aspect-ratio:1/1.1; border-radius:11px; border:2px dashed var(--line); display:grid; place-items:center; font-family:var(--letters); font-weight:700; font-size:22px; color:var(--muted)}
+.dmark.part{border:2px solid var(--tile-edge); background:linear-gradient(to top, var(--tile) var(--fill,50%), transparent var(--fill,50%)); color:var(--ink)}
+.dmark.full{border:0; border-bottom:4px solid var(--tile-edge); background:var(--tile); color:var(--tile-ink)}
+.dday.today{color:var(--ink); font-weight:700}
+.dday.today .dmark.none{border:2px solid var(--brand)}
+.dday.future .dmark{opacity:.45}
+.goaltext{margin:2px 0 6px}
+/* parent view */
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:14px 0 0}
+.kpi{background:var(--card); border:2px solid var(--line); border-radius:16px; padding:12px 14px}
+.kpi b{display:block; font-family:var(--letters); font-size:36px; font-weight:600; line-height:1.1}
+.kpi span{display:block; font-size:16px}
+.kpi .sub{color:var(--muted); font-size:14px; margin-top:2px}
+.panel{background:var(--card); border:2px solid var(--line); border-radius:18px; padding:14px 16px; margin-top:14px}
+.panel h3{margin:0 0 8px; font-size:22px; font-weight:600}
+.chart{display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:8px}
+.col{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:13px}
+.col .val{font-weight:700; min-height:20px; font-size:15px}
+.barwrap{height:120px; width:100%; display:flex; align-items:flex-end; justify-content:center; border-bottom:2px solid var(--line)}
+.bar{width:100%; max-width:40px; background:var(--brand); border-radius:8px 8px 0 0}
+.bar.met{background:var(--good)}
+.col .dl{text-align:center; line-height:1.2; color:var(--muted)}
+.col .acc{font-weight:700}
+.rows{display:flex; flex-direction:column; gap:8px}
+.rrow{display:grid; grid-template-columns:minmax(80px,1.1fr) 2.6fr minmax(90px,auto); gap:10px; align-items:center; font-size:16px}
+.meter{height:12px; background:var(--paper); border:2px solid var(--line); border-radius:999px; overflow:hidden}
+.meter i{display:block; height:100%; background:var(--brand)}
+.rrow .num{color:var(--muted); font-size:14px; text-align:right}
+.subhead{color:var(--muted); font-size:15px; margin:10px 0 2px}
+.weeknav{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px}
+.weeknav b{font-family:var(--display); font-size:20px; font-weight:600}
+.settings{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px}
+.field label{display:block; color:var(--muted); font-size:15px; margin-bottom:4px}
+select,input.pin{font:inherit; font-size:17px; border:2px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--paper); color:var(--ink)}
+.gate{max-width:380px; margin:60px auto; text-align:center}
+.gate h1{font-size:32px; margin:0 0 6px}
+.gate input.pin{text-align:center; font-size:30px; width:170px; letter-spacing:.3em}
+.done .plabel{margin-top:6px; font-size:18px}
+/* done */
+.done{text-align:center}
+.done h1{font-size:clamp(28px,7vw,44px); margin:10px 0 4px}
+.big-score{font-family:var(--display); font-size:clamp(46px,14vw,84px); font-weight:700; line-height:1.05}
+.done .sub{color:var(--muted); font-size:20px}
+.missed{text-align:left; margin:22px 0 0}
+.missed h2{margin-top:0}
+.missed .m{display:flex; align-items:center; gap:10px; background:var(--card); border:2px solid var(--line); border-radius:14px; padding:8px 14px; margin:8px 0}
+.missed .m .letters{font-size:26px; flex:1}
+.done .actions{margin-top:24px}
+</style>
+</head>
+<body>
+<main class="app">
+
+  <!-- HOME -->
+  <section id="home">
+    <header class="hero">
+      <div class="logo-tiles" aria-hidden="true"><span>Α</span><span>Β</span><span>Γ</span><span>Δ</span><span>Ω</span></div>
+      <div>
+        <h1>Spelling Quest</h1>
+        <p>Train like a hero. Spell like a god.</p>
+      </div>
+    </header>
+    <div class="keyband" aria-hidden="true"></div>
+
+    <div class="stats">
+      <div class="stat"><b id="sStars">0</b><span>stars</span></div>
+      <div class="stat"><b id="sDays">0</b><span>day streak</span></div>
+      <div class="stat"><b id="sBest">0</b><span>most in a row</span></div>
+      <div class="stat"><b id="sMastered">0</b><span>words mastered</span></div>
+      <button class="ghost" id="soundBtn" type="button">Sounds on</button>
+    </div>
+
+    <div class="rank" id="rankCard">
+      <div class="rank-top"><div class="rank-name" id="rankName">Mortal</div><div class="plabel" id="rankNext"></div></div>
+      <div class="progress" aria-hidden="true"><div id="rankBar"></div></div>
+    </div>
+
+    <div class="week" id="weekCard">
+      <div class="week-head"><h3>Your week</h3><div class="plabel" id="weekSum"></div></div>
+      <div class="days" id="days"></div>
+      <div class="plabel goaltext" id="goalText"></div>
+      <div class="progress" aria-hidden="true"><div id="goalBar"></div></div>
+    </div>
+
+    <h2>Pick a word list</h2>
+    <div class="grid" id="lists"></div>
+
+    <h2>Pick a game</h2>
+    <div class="grid" id="modes"></div>
+
+    <button class="btn big" id="startBtn" type="button">Start a round</button>
+    <div class="msg" id="startMsg" role="status"></div>
+
+    <h2>Words in this list</h2>
+    <div class="chips" id="chips"></div>
+    <p class="legend">Each dot means you spelled the word right on your first try. Three dots in a row and the word is mastered.</p>
+
+    <details id="customBox">
+      <summary>Add your own words</summary>
+      <p>Type one word per line. To add a sentence clue, put a bar after the word, like this: <b>ocean | The ocean was calm this morning.</b></p>
+      <textarea id="customText" spellcheck="false" placeholder="necessary | It is necessary to wear a helmet.&#10;separate&#10;rhythm | The drummer kept a steady rhythm."></textarea>
+      <div class="row">
+        <button class="btn small" id="saveCustom" type="button">Save my words</button>
+        <span id="customMsg" role="status" class="plabel"></span>
+      </div>
+    </details>
+
+    <p><button class="link" id="parentBtn" type="button">Parent view</button></p>
+  </section>
+
+  <!-- PLAY -->
+  <section id="play" hidden>
+    <div class="topbar">
+      <button class="btn alt small" id="backBtn" type="button">Back</button>
+      <div class="grow">
+        <div class="plabel" id="pLabel"></div>
+        <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+      </div>
+      <div class="score"><span id="pStars">0</span> stars</div>
+    </div>
+
+    <div class="board" id="board">
+      <div class="audio">
+        <button class="btn small" id="hearBtn" type="button">Hear the word</button>
+        <button class="btn alt small" id="slowBtn" type="button">Slower</button>
+        <button class="btn alt small" id="sentBtn" type="button">Hear it in a sentence</button>
+      </div>
+      <div class="clue" id="clue"></div>
+      <div class="hintline" id="hintLine" aria-live="polite"></div>
+
+      <div class="pattern" id="pattern" hidden></div>
+
+      <div id="typeArea">
+        <input class="answer" id="ans" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Type the word here" placeholder="type here">
+      </div>
+
+      <div id="tileArea" hidden>
+        <div class="slots" id="slots" aria-live="polite"></div>
+        <div class="pool" id="pool"></div>
+        <div class="actions">
+          <button class="btn alt small" id="undoBtn" type="button">Undo</button>
+          <button class="btn alt small" id="clearBtn" type="button">Clear</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="checkBtn" type="button">Check</button>
+        <button class="btn alt" id="hintBtn" type="button">Hint</button>
+        <button class="btn" id="nextBtn" type="button" hidden>Next word</button>
+      </div>
+
+      <div class="fb" id="fb" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- DONE -->
+  <section id="done" class="done" hidden>
+    <h1 id="dTitle">Round complete</h1>
+    <div class="big-score" id="dScore"></div>
+    <div class="sub" id="dSub"></div>
+    <div class="plabel" id="dToday"></div>
+    <div class="rankup" id="dRank" hidden></div>
+    <div class="missed" id="missedBox" hidden>
+      <h2>Words still standing</h2>
+      <div id="missedList"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="againBtn" type="button">Another round</button>
+      <button class="btn alt" id="missedBtn" type="button" hidden>Face the missed words</button>
+      <button class="btn alt" id="homeBtn" type="button">Back to the lists</button>
+    </div>
+  </section>
+
+  <!-- PARENT GATE -->
+  <section id="gate" hidden>
+    <div class="gate">
+      <h1 class="display">Parent view</h1>
+      <p class="plabel">Enter your 4-digit PIN.</p>
+      <input class="pin" id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN">
+      <div class="msg" id="pinMsg" role="status"></div>
+      <div class="actions">
+        <button class="btn" id="pinGo" type="button">Open</button>
+        <button class="btn alt" id="pinBack" type="button">Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARENT -->
+  <section id="parent" hidden>
+    <div class="topbar">
+      <button class="btn alt small" id="pBack" type="button">Back</button>
+      <h1 class="display" style="margin:0;font-size:32px;flex:1">Parent view</h1>
+      <button class="btn alt small" id="pRefresh" type="button">Refresh</button>
+    </div>
+    <div class="plabel" id="syncLine"></div>
+
+    <div class="weeknav">
+      <button class="btn alt small" id="wPrev" type="button">Earlier week</button>
+      <b id="wLabel"></b>
+      <button class="btn alt small" id="wNext" type="button">Later week</button>
+      <button class="link" id="wNow" type="button">Jump to this week</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="panel">
+      <h3>Words each day</h3>
+      <div class="chart" id="chart"></div>
+      <p class="legend" id="chartNote"></p>
+    </div>
+
+    <div class="panel">
+      <h3>Recent weeks</h3>
+      <div class="rows" id="trend"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Words to work on</h3>
+      <div class="chips" id="trouble"></div>
+      <p class="legend">The most-missed words from the last 60 days, counting first tries only. Green means he has since mastered it.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Mastered words</h3>
+      <div class="chips" id="masteredChips"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Accuracy by game and list</h3>
+      <div id="breakdown"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Settings</h3>
+      <div class="settings">
+        <div class="field"><label for="goalDaily">Daily goal (words)</label><select id="goalDaily"></select></div>
+        <div class="field"><label for="goalWeekly">Weekly goal (days)</label><select id="goalWeekly"></select></div>
+        <div class="field">
+          <label for="pinNew">Parent PIN</label>
+          <div class="row" style="margin-top:0">
+            <input class="pin" id="pinNew" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="4 digits" style="width:120px">
+            <button class="btn alt small" id="pinSave" type="button">Save</button>
+            <button class="btn alt small" id="pinClear" type="button">Remove</button>
+          </div>
+        </div>
+      </div>
+      <div class="plabel" id="setMsg" role="status"></div>
+      <p class="legend">A PIN keeps casual peeking out of this page. It lives in this browser and isn’t strong security.</p>
+      <div class="row">
+        <button class="btn alt small" id="csvBtn" type="button">Download the log (CSV)</button>
+        <button class="btn alt small" id="backupBtn" type="button">Save a backup</button>
+        <button class="btn alt small" id="restoreBtn" type="button">Restore a backup</button>
+        <input id="restoreFile" type="file" accept="application/json,.json" hidden>
+      </div>
+      <div class="plabel" id="backupNote"></div>
+      <p class="legend">Progress is stored in this browser on this device. A backup file protects it if browser data is ever cleared, and lets you move it to another device.</p>
+      <div class="row"><button class="link" id="resetBtn" type="button">Reset stars and word mastery</button></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+
+  /* ---------- storage (every call guarded) ---------- */
+  var store = {
+    get: function(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+    set: function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  };
+  var progress = store.get("spell:progress", {});
+  var stats = store.get("spell:stats", { stars: 0, best: 0, sound: true });
+  var custom = store.get("spell:custom", []);
+  var sel = { list: "myth", mode: "type" };
+  var events = store.get("spell:events", []);
+  var synced = store.get("spell:synced", {});
+  var goals = store.get("spell:goals", { daily: 10, weekly: 4 });
+  var pin = store.get("spell:pin", "");
+  var device = store.get("spell:device", "");
+  if (!device){ device = Math.random().toString(36).slice(2, 8); store.set("spell:device", device); }
+  var DB = null, DL = null, remote = [], weekOff = 0, parentOpen = false;
+  var syncBusy = false, syncFailed = false, syncOK = false, syncCode = "", syncDirty = {};
+
+  /* ---------- word lists ---------- */
+  var BASE = [
+    { id:"myth", name:"Myths and monsters", desc:"Heroes, beasts, and prophecies from the old stories.", words:[
+      ["mythology","He read every book about Greek mythology."],
+      ["immortal","In the old stories, the gods were immortal."],
+      ["prophecy","The prophecy warned of a great storm."],
+      ["oracle","Heroes traveled far to ask the oracle for advice."],
+      ["labyrinth","The hero found his way out of the labyrinth."],
+      ["minotaur","The minotaur was half man and half bull."],
+      ["centaur","A centaur galloped across the meadow."],
+      ["trident","The sea god raised his trident above the waves."],
+      ["thunderbolt","A thunderbolt split the sky in two."],
+      ["courage","It takes courage to face your fears."],
+      ["destiny","The young hero believed in his destiny."],
+      ["ambrosia","Ambrosia was the food of the gods."],
+      ["chimera","The chimera had a lion’s head and a snake’s tail."],
+      ["nymph","A nymph lived in the spring beside the old oak."],
+      ["sphinx","The sphinx asked every traveler a tricky riddle."],
+      ["underworld","The ghosts drifted through the underworld."]
+    ]},
+    { id:"gods", name:"Gods of Olympus", desc:"The twelve and a few friends, with their tricky names.", words:[
+      ["Zeus","Zeus was king of the gods and ruled the sky."],
+      ["Hera","Hera was the queen of Olympus."],
+      ["Poseidon","Poseidon ruled the sea."],
+      ["Athena","Athena was the goddess of wisdom."],
+      ["Apollo","Apollo drove the sun across the sky."],
+      ["Artemis","Artemis was the goddess of the hunt and the moon."],
+      ["Hermes","Hermes wore winged sandals to deliver messages."],
+      ["Ares","Ares was the god of war."],
+      ["Aphrodite","Aphrodite was the goddess of love."],
+      ["Hephaestus","Hephaestus forged weapons in his fiery workshop."],
+      ["Demeter","Demeter made the crops grow each spring."],
+      ["Dionysus","Dionysus was the god of grapes and celebration."],
+      ["Hades","Hades ruled the land of the dead."]
+    ]},
+    { id:"tricky", name:"Tricky words", desc:"Words almost everyone misspells at least once.", words:[
+      ["necessary","It is necessary to wear a helmet when you ride a bike."],
+      ["separate","Please keep the red socks separate from the white ones."],
+      ["definitely","I will definitely finish my homework before dinner."],
+      ["receive","We hope to receive the package on Friday."],
+      ["believe","I believe our team can win the game."],
+      ["February","My birthday is in February."],
+      ["library","We borrowed three books from the library."],
+      ["government","The government builds roads and bridges."],
+      ["environment","We should protect the environment by recycling."],
+      ["restaurant","The restaurant was full of hungry families."],
+      ["beautiful","The sunset over the lake was beautiful."],
+      ["enough","Do we have enough pencils for everyone?"],
+      ["favorite","Pizza is my favorite food."],
+      ["knowledge","Reading gives you knowledge about the world."],
+      ["calendar","Mark the field trip on the calendar."]
+    ]},
+    { id:"silent", name:"Silent letters", desc:"Letters you can’t hear but still have to write.", words:[
+      ["knight","The knight rode his horse to the castle."],
+      ["wrist","She wore a watch on her wrist."],
+      ["listen","Please listen carefully to the directions."],
+      ["castle","The castle had tall stone towers."],
+      ["honest","Be honest and tell the truth."],
+      ["answer","Raise your hand if you know the answer."],
+      ["whistle","The coach blew her whistle."],
+      ["climb","We climb the hill every Saturday."],
+      ["thumb","He hurt his thumb with the hammer."],
+      ["autumn","Leaves turn orange and red in autumn."],
+      ["column","Add the numbers in the first column."],
+      ["design","She will design a poster for the fair."],
+      ["island","A small island sat in the middle of the bay."]
+    ]},
+    { id:"affix", name:"Prefixes and endings", desc:"Word parts like un-, dis-, -ful, and -ness.", words:[
+      ["unhappy","The puppy looked unhappy when we left."],
+      ["disappear","Magicians make rabbits disappear."],
+      ["reread","I will reread the chapter to be sure."],
+      ["misunderstand","I did not want you to misunderstand me."],
+      ["preview","We watched a preview of the new movie."],
+      ["careful","Be careful on the icy steps."],
+      ["enjoyment","Her enjoyment of music grew every year."],
+      ["kindness","A little kindness can brighten someone’s day."],
+      ["hopeless","The puzzle seemed hopeless until I found the corner piece."],
+      ["impossible","It is impossible to count every star."],
+      ["powerful","A powerful wind knocked over the fence."],
+      ["replacement","We need a replacement for the broken lamp."]
+    ]},
+    { id:"science", name:"Science words", desc:"Big words from space, weather, and nature.", words:[
+      ["planet","Mars is the fourth planet from the sun."],
+      ["gravity","Gravity keeps our feet on the ground."],
+      ["habitat","A pond is the habitat of many frogs."],
+      ["ecosystem","Every plant and animal has a role in the ecosystem."],
+      ["experiment","Our experiment tested how plants grow in the dark."],
+      ["predator","The owl is a night predator."],
+      ["atmosphere","The atmosphere is a blanket of air around Earth."],
+      ["temperature","The temperature dropped below freezing."],
+      ["volcano","Smoke rose from the top of the volcano."],
+      ["evaporate","Puddles evaporate when the sun comes out."],
+      ["microscope","We saw tiny cells under the microscope."],
+      ["energy","Plants turn sunlight into energy."]
+    ]}
+  ].map(function(l){
+    return { id:l.id, name:l.name, desc:l.desc, words:l.words.map(function(x){ return { w:x[0], s:x[1] }; }) };
+  });
+
+  var RANKS = [["Mortal", 0], ["Squire", 30], ["Hero", 100], ["Champion", 250], ["Demigod", 500], ["Legend of Olympus", 1000]];
+  function rankIdx(st){ var r = 0; RANKS.forEach(function(x, i){ if (st >= x[1]) r = i; }); return r; }
+
+  var MODES = [
+    { id:"type",    name:"Listen and type", desc:"Hear the word, then type it." },
+    { id:"tiles",   name:"Letter tiles",    desc:"Tap the scrambled letters in the right order." },
+    { id:"missing", name:"Fill the gaps",   desc:"Some letters are hidden. Type the whole word." }
+  ];
+
+  function allLists(){
+    return BASE.concat([{ id:"mine", name:"My words", desc: custom.length ? "The words you added." : "Add your own words at the bottom of this page.", words:custom }]);
+  }
+  function curList(){ return allLists().filter(function(l){ return l.id === sel.list; })[0] || BASE[0]; }
+
+  /* ---------- helpers ---------- */
+  function shuffle(a){
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function reEsc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function key(w){ return w.toLowerCase(); }
+  function mastery(w){ var p = progress[key(w)]; return Math.min(3, p && p.c ? p.c : 0); }
+  function saveAll(){ store.set("spell:progress", progress); store.set("spell:stats", stats); }
+  function norm(s){ return s.toLowerCase().replace(/[’]/g, "'").trim(); }
+  function pickOne(a){ return a[Math.floor(Math.random() * a.length)]; }
+  function show(id){
+    ["home","play","done","gate","parent"].forEach(function(s){ $("#" + s).hidden = (s !== id); });
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- sound effects ---------- */
+  var actx = null;
+  function tone(freqs){
+    if (stats.sound === false) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      freqs.forEach(function(f, i){
+        var o = actx.createOscillator(), g = actx.createGain();
+        o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(actx.destination);
+        var t = actx.currentTime + i * 0.12;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        o.start(t); o.stop(t + 0.24);
+      });
+    } catch(e){}
+  }
+
+  /* ---------- speech ---------- */
+  var synth = ("speechSynthesis" in window) ? window.speechSynthesis : null;
+  var voice = null;
+  function pickVoice(){
+    if (!synth) return;
+    var vs = synth.getVoices() || [];
+    voice = vs.filter(function(v){ return /^en-US/i.test(v.lang) && /(Samantha|Google|Natural|Aria|Jenny|Ava)/i.test(v.name); })[0]
+         || vs.filter(function(v){ return /^en/i.test(v.lang); })[0] || null;
+  }
+  if (synth){ pickVoice(); try { synth.onvoiceschanged = pickVoice; } catch(e){} }
+  function say(parts, rate){
+    if (!synth){ return; }
+    try {
+      synth.cancel();
+      parts.forEach(function(p){
+        var u = new SpeechSynthesisUtterance(p);
+        u.lang = "en-US"; u.rate = rate || 0.85; if (voice) u.voice = voice;
+        synth.speak(u);
+      });
+    } catch(e){}
+  }
+  function sayWord(rate){ say([R.queue[R.idx].w], rate); }
+  function saySentence(){ var c = R.queue[R.idx]; if (c.s) say([c.w, c.s, c.w], 0.85); }
+  function spellOut(w){ say([w, w.split("").join(", "), w], 0.7); }
+
+  /* ---------- tracking: daily log, week strip, parent view ---------- */
+  var DAYN = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+  function dkey(d){ return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function addDays(d, n){ var x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+  function weekStart(off){
+    var d = new Date(); d.setHours(12, 0, 0, 0);
+    return addDays(d, -((d.getDay() + 6) % 7) + off * 7);
+  }
+  function fmtShort(d){
+    try { return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch(e){ return dkey(d); }
+  }
+  function pct(a, b){ return b ? Math.round(a / b * 100) : null; }
+
+  function allEvents(){
+    var m = {};
+    remote.forEach(function(e){ m[e.id] = e; });
+    events.forEach(function(e){ m[e.id] = e; });
+    return Object.keys(m).map(function(k){ return m[k]; });
+  }
+  function dayStats(evs){
+    var o = {};
+    evs.forEach(function(e){ var x = o[e.d] || (o[e.d] = { n: 0, ok: 0 }); x.n++; x.ok += e.ok; });
+    return o;
+  }
+  function summarize(evs){
+    var words = {}, ok = 0;
+    evs.forEach(function(e){ words[e.w.toLowerCase()] = 1; ok += e.ok; });
+    var sorted = evs.slice().sort(function(a, b){ return a.t - b.t; });
+    var ms = 0, prev = null;
+    sorted.forEach(function(e){ ms += (prev !== null && e.t - prev < 120000) ? e.t - prev : 20000; prev = e.t; });
+    return { n: evs.length, distinct: Object.keys(words).length, ok: ok, acc: pct(ok, evs.length),
+             min: evs.length ? Math.max(1, Math.round(ms / 60000)) : 0 };
+  }
+  function weekEvents(evs, off){
+    var ws = weekStart(off), from = dkey(ws), to = dkey(addDays(ws, 6));
+    return evs.filter(function(e){ return e.d >= from && e.d <= to; });
+  }
+  function dayStreak(o){
+    var d = new Date(); d.setHours(12, 0, 0, 0);
+    var t = o[dkey(d)];
+    if (!(t && t.n >= goals.daily)) d = addDays(d, -1);
+    var s = 0, x;
+    while ((x = o[dkey(d)]) && x.n >= goals.daily){ s++; d = addDays(d, -1); }
+    return s;
+  }
+  function masteredFromEvents(evs){
+    var streak = {}, name = {};
+    evs.slice().sort(function(a, b){ return a.t - b.t; }).forEach(function(e){
+      var k = e.w.toLowerCase(); name[k] = e.w; streak[k] = e.ok ? (streak[k] || 0) + 1 : 0;
+    });
+    return Object.keys(streak).filter(function(k){ return streak[k] >= 3; }).map(function(k){ return name[k]; }).sort();
+  }
+  function troubleWords(evs){
+    var cut = Date.now() - 60 * 86400000, g = {};
+    evs.forEach(function(e){
+      if (e.t < cut) return;
+      var k = e.w.toLowerCase(), x = g[k] || (g[k] = { w: e.w, n: 0, miss: 0 });
+      x.n++; if (!e.ok) x.miss++;
+    });
+    return Object.keys(g).map(function(k){ return g[k]; }).filter(function(x){ return x.miss > 0; })
+      .sort(function(a, b){ return b.miss - a.miss || (b.miss / b.n) - (a.miss / a.n); }).slice(0, 12);
+  }
+
+  function logEvent(cur, ok){
+    var now = new Date();
+    var e = { id: now.getTime().toString(36) + Math.random().toString(36).slice(2, 5), t: now.getTime(), d: dkey(now),
+              w: cur.w, ok: ok ? 1 : 0, h: R.hint ? 1 : 0, l: sel.list, m: R.mode, dev: device };
+    events.push(e);
+    if (events.length > 6000) events = events.slice(-6000);
+    store.set("spell:events", events);
+    syncDirty[e.d] = 1;
+    flush();
+  }
+
+  /* shared record (only when the viewer's session allows it) */
+  function flush(){
+    if (!DB || syncBusy || syncFailed) return;
+    var dates = Object.keys(syncDirty);
+    if (!dates.length) return;
+    var d = dates[0]; delete syncDirty[d];
+    var evs = events.filter(function(e){ return e.d === d && e.dev === device; });
+    syncBusy = true;
+    DB.doc("days/" + d + "_" + device).set({ d: d, dev: device, events: evs }).then(function(){
+      synced[d] = evs.length; store.set("spell:synced", synced);
+      syncOK = true; syncBusy = false; flush();
+    }, function(err){
+      syncDirty[d] = 1; syncBusy = false; syncFailed = true; syncOK = false;
+      syncCode = (err && err.code) || "error";
+      if (parentOpen) updateSyncLine();
+    });
+  }
+  function loadRemote(done){
+    if (!DB){ if (done) done(); return; }
+    DB.collection("days").get().then(function(snap){
+      var out = [];
+      snap.docs.forEach(function(doc){
+        var v = doc.data() || {};
+        (v.events || []).forEach(function(e){ if (e && e.id && e.w) out.push(e); });
+      });
+      remote = out; syncOK = true;
+      renderTracker();
+      if (parentOpen) renderParent();
+      if (done) done();
+    }, function(err){
+      syncCode = (err && err.code) || "error"; syncOK = false;
+      if (parentOpen) updateSyncLine();
+      if (done) done();
+    });
+  }
+  function loadSettings(){
+    if (!DB) return;
+    DB.doc("settings/main").get().then(function(snap){
+      if (!snap.exists) return;
+      var v = snap.data() || {}, ch = false;
+      if (v.daily && v.daily !== goals.daily){ goals.daily = v.daily; ch = true; }
+      if (v.weekly && v.weekly !== goals.weekly){ goals.weekly = v.weekly; ch = true; }
+      if (ch){ store.set("spell:goals", goals); renderHome(); if (parentOpen) renderParent(); }
+    }, function(){});
+  }
+  function saveGoals(){
+    store.set("spell:goals", goals);
+    if (DB){ DB.doc("settings/main").set({ daily: goals.daily, weekly: goals.weekly }).then(function(){}, function(){}); }
+    renderTracker();
+  }
+
+  /* kid-facing week strip */
+  function renderTracker(){
+    var o = dayStats(allEvents());
+    var ws = weekStart(0), todayK = dkey(new Date());
+    var box = $("#days"); box.innerHTML = "";
+    var full = 0;
+    for (var i = 0; i < 7; i++){
+      var d = addDays(ws, i), k = dkey(d), x = o[k] || { n: 0 };
+      var st = x.n >= goals.daily ? "full" : (x.n > 0 ? "part" : "none");
+      if (st === "full") full++;
+      var cell = document.createElement("div");
+      cell.className = "dday" + (k === todayK ? " today" : "") + (k > todayK ? " future" : "");
+      cell.setAttribute("aria-label", DAYN[i] + ": " + x.n + " words" + (st === "full" ? ", goal met" : ""));
+      var mk = document.createElement("div");
+      mk.className = "dmark " + st;
+      if (st === "part") mk.style.setProperty("--fill", Math.max(20, Math.round(x.n / goals.daily * 100)) + "%");
+      mk.textContent = st === "full" ? "✓" : (st === "part" ? String(x.n) : "");
+      var lb = document.createElement("span"); lb.textContent = DAYN[i];
+      cell.appendChild(mk); cell.appendChild(lb); box.appendChild(cell);
+    }
+    var t = o[todayK] ? o[todayK].n : 0;
+    $("#goalText").textContent = t >= goals.daily ? "Today’s goal is done: " + t + " words." : t + " of " + goals.daily + " words today.";
+    $("#goalBar").style.width = Math.min(100, Math.round(t / goals.daily * 100)) + "%";
+    $("#weekSum").textContent = full + " of " + goals.weekly + " goal days" + (full >= goals.weekly ? ". Week goal met!" : "");
+    $("#sDays").textContent = dayStreak(o);
+  }
+
+  /* parent view */
+  function updateSyncLine(){
+    var el = $("#syncLine");
+    if (!DB) el.textContent = "Showing practice recorded on this device.";
+    else if (syncFailed || (!syncOK && syncCode)) el.textContent = "Couldn’t reach the shared record (" + (syncCode || "error") + "). Showing this device only.";
+    else el.textContent = "Showing practice from every device that synced to this page.";
+  }
+  function rowEl(label, frac, num){
+    var r = document.createElement("div"); r.className = "rrow";
+    var a = document.createElement("span"); a.textContent = label;
+    var m = document.createElement("div"); m.className = "meter";
+    var i = document.createElement("i"); i.style.width = Math.round(Math.max(0, Math.min(1, frac)) * 100) + "%";
+    m.appendChild(i);
+    var n = document.createElement("span"); n.className = "num"; n.textContent = num;
+    r.appendChild(a); r.appendChild(m); r.appendChild(n);
+    return r;
+  }
+  function chipEl(text, cls){
+    var c = document.createElement("span"); c.className = "chip" + (cls ? " " + cls : ""); c.textContent = text; return c;
+  }
+  function groupRows(container, title, evs, keyFn, nameFn){
+    var g = {};
+    evs.forEach(function(e){ var k = keyFn(e); var x = g[k] || (g[k] = { n: 0, ok: 0 }); x.n++; x.ok += e.ok; });
+    var keys = Object.keys(g);
+    if (!keys.length) return;
+    var h = document.createElement("div"); h.className = "subhead"; h.textContent = title; container.appendChild(h);
+    var rows = document.createElement("div"); rows.className = "rows";
+    keys.sort(function(a, b){ return g[b].n - g[a].n; }).forEach(function(k){
+      rows.appendChild(rowEl(nameFn(k), g[k].ok / g[k].n, pct(g[k].ok, g[k].n) + "% of " + g[k].n));
+    });
+    container.appendChild(rows);
+  }
+
+  function renderParent(){
+    updateSyncLine();
+    var evs = allEvents();
+    var ws = weekStart(weekOff), we = addDays(ws, 6);
+    $("#wLabel").textContent = (weekOff === 0 ? "This week: " : "") + fmtShort(ws) + " to " + fmtShort(we);
+    $("#wNext").disabled = weekOff >= 0;
+
+    var wk = weekEvents(evs, weekOff), S = summarize(wk), P = summarize(weekEvents(evs, weekOff - 1));
+    var o = dayStats(wk);
+    var goalDays = Object.keys(o).filter(function(k){ return o[k].n >= goals.daily; }).length;
+    var accSub = "";
+    if (S.acc !== null && P.acc !== null){
+      accSub = S.acc === P.acc ? "Same as the week before" : (S.acc > P.acc ? "Up " : "Down ") + Math.abs(S.acc - P.acc) + " points from the week before";
+    }
+    var kp = [
+      [String(S.n), "words practiced", S.n ? S.distinct + " different words" : "No practice this week"],
+      [S.acc === null ? "–" : S.acc + "%", "right on the first try", accSub],
+      [goalDays + " of " + goals.weekly, "goal days", "A goal day is " + goals.daily + " or more words"],
+      [String(S.min), "minutes (estimate)", "Based on the pauses between words"]
+    ];
+    var kbox = $("#kpis"); kbox.innerHTML = "";
+    kp.forEach(function(k){
+      var d = document.createElement("div"); d.className = "kpi";
+      var b = document.createElement("b"); b.textContent = k[0];
+      var s1 = document.createElement("span"); s1.textContent = k[1];
+      var s2 = document.createElement("span"); s2.className = "sub"; s2.textContent = k[2];
+      d.appendChild(b); d.appendChild(s1); d.appendChild(s2); kbox.appendChild(d);
+    });
+
+    var mx = goals.daily, i;
+    for (i = 0; i < 7; i++){ var kk = dkey(addDays(ws, i)); if (o[kk] && o[kk].n > mx) mx = o[kk].n; }
+    var chart = $("#chart"); chart.innerHTML = "";
+    for (i = 0; i < 7; i++){
+      var day = addDays(ws, i), x = o[dkey(day)] || { n: 0, ok: 0 };
+      var col = document.createElement("div"); col.className = "col";
+      var val = document.createElement("div"); val.className = "val"; val.textContent = x.n ? String(x.n) : "";
+      var bw = document.createElement("div"); bw.className = "barwrap";
+      if (x.n){
+        var bar = document.createElement("div"); bar.className = "bar" + (x.n >= goals.daily ? " met" : "");
+        bar.style.height = Math.max(6, Math.round(x.n / mx * 120)) + "px"; bw.appendChild(bar);
+      }
+      var dl = document.createElement("div"); dl.className = "dl";
+      dl.innerHTML = DAYN[i] + "<br>" + day.getDate();
+      var ac = document.createElement("div"); ac.className = "acc"; ac.textContent = x.n ? pct(x.ok, x.n) + "%" : "–";
+      col.appendChild(val); col.appendChild(bw); col.appendChild(dl); col.appendChild(ac); chart.appendChild(col);
+    }
+    $("#chartNote").textContent = "Green bars reached the daily goal of " + goals.daily + " words. The percentage under each bar is first-try accuracy for that day.";
+
+    var trend = $("#trend"); trend.innerHTML = "";
+    var weeks = [], wmax = 1;
+    for (i = 5; i >= 0; i--){
+      var off = weekOff - i, sm = summarize(weekEvents(evs, off));
+      weeks.push({ ws: weekStart(off), sm: sm }); if (sm.n > wmax) wmax = sm.n;
+    }
+    weeks.forEach(function(w){
+      trend.appendChild(rowEl("Week of " + fmtShort(w.ws), w.sm.n / wmax,
+        w.sm.n ? w.sm.n + " words, " + w.sm.acc + "%" : "No practice"));
+    });
+
+    var tr = $("#trouble"); tr.innerHTML = "";
+    var mastered = masteredFromEvents(evs), mset = {};
+    mastered.forEach(function(w){ mset[w.toLowerCase()] = 1; });
+    var tw = troubleWords(evs);
+    if (!tw.length) tr.appendChild(chipEl("Nothing yet. Missed words will show up here."));
+    tw.forEach(function(x){ tr.appendChild(chipEl(x.w + " · missed " + x.miss + " of " + x.n, mset[x.w.toLowerCase()] ? "m3" : "")); });
+
+    var mc = $("#masteredChips"); mc.innerHTML = "";
+    if (!mastered.length) mc.appendChild(chipEl("No mastered words yet. Three first-try wins in a row does it."));
+    mastered.forEach(function(w){ mc.appendChild(chipEl(w, "m3")); });
+
+    var bd = $("#breakdown"); bd.innerHTML = "";
+    var lists = allLists();
+    groupRows(bd, "By game", evs, function(e){ return e.m; }, function(k){
+      var m = MODES.filter(function(x){ return x.id === k; })[0]; return m ? m.name : k;
+    });
+    groupRows(bd, "By word list", evs, function(e){ return e.l; }, function(k){
+      var l = lists.filter(function(x){ return x.id === k; })[0]; return l ? l.name : k;
+    });
+    if (!evs.length){ var em = document.createElement("p"); em.className = "legend"; em.textContent = "Nothing to show yet. Finish a round and it will appear here."; bd.appendChild(em); }
+
+    $("#goalDaily").value = String(goals.daily);
+    $("#goalWeekly").value = String(goals.weekly);
+    var lb = store.get("spell:lastBackup", 0), note = "";
+    if (lb) note = "Last backup: " + fmtShort(new Date(lb)) + ".";
+    else if (evs.length) note = "No backup saved yet.";
+    if (evs.length && (!lb || Date.now() - lb > 14 * 86400000)) note += (note ? " " : "") + "Worth saving one soon.";
+    $("#backupNote").textContent = note;
+  }
+
+  function csvText(){
+    var lists = allLists();
+    function cell(v){ return '"' + String(v).replace(/"/g, '""') + '"'; }
+    var rows = [["date","time","word","right_first_try","hint_used","word_list","game"].join(",")];
+    allEvents().sort(function(a, b){ return a.t - b.t; }).forEach(function(e){
+      var t = new Date(e.t);
+      var l = lists.filter(function(x){ return x.id === e.l; })[0];
+      var m = MODES.filter(function(x){ return x.id === e.m; })[0];
+      rows.push([e.d, pad(t.getHours()) + ":" + pad(t.getMinutes()), cell(e.w), e.ok ? "yes" : "no", e.h ? "yes" : "no",
+                 cell(l ? l.name : e.l), cell(m ? m.name : e.m)].join(","));
+    });
+    return rows.join("\n");
+  }
+
+  /* ---------- home screen ---------- */
+  function renderRank(){
+    var i = rankIdx(stats.stars), cur = RANKS[i], nxt = RANKS[i + 1];
+    $("#rankName").textContent = cur[0];
+    if (nxt){
+      $("#rankNext").textContent = (nxt[1] - stats.stars) + " more stars to become a " + nxt[0];
+      $("#rankBar").style.width = Math.round((stats.stars - cur[1]) / (nxt[1] - cur[1]) * 100) + "%";
+    } else {
+      $("#rankNext").textContent = "Highest rank reached";
+      $("#rankBar").style.width = "100%";
+    }
+  }
+  function renderHome(){
+    $("#sStars").textContent = stats.stars;
+    $("#sBest").textContent = stats.best;
+    $("#sMastered").textContent = Object.keys(progress).filter(function(k){ return progress[k].c >= 3; }).length;
+    $("#soundBtn").textContent = stats.sound === false ? "Sounds off" : "Sounds on";
+    renderRank();
+    renderTracker();
+
+    var lists = $("#lists"); lists.innerHTML = "";
+    allLists().forEach(function(l){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "pick";
+      b.setAttribute("aria-pressed", String(l.id === sel.list));
+      var done = l.words.filter(function(x){ return mastery(x.w) >= 3; }).length;
+      b.innerHTML = '<span class="t">' + esc(l.name) + '</span><span class="d">' + esc(l.desc) + '</span><span class="n">' + done + ' of ' + l.words.length + ' mastered</span><span class="mini"><i style="width:' + (l.words.length ? Math.round(done / l.words.length * 100) : 0) + '%"></i></span>';
+      b.addEventListener("click", function(){ sel.list = l.id; $("#startMsg").textContent = ""; renderHome(); });
+      lists.appendChild(b);
+    });
+
+    var modes = $("#modes"); modes.innerHTML = "";
+    MODES.forEach(function(m){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "pick";
+      b.setAttribute("aria-pressed", String(m.id === sel.mode));
+      b.innerHTML = '<span class="t">' + esc(m.name) + '</span><span class="d">' + esc(m.desc) + '</span>';
+      b.addEventListener("click", function(){ sel.mode = m.id; renderHome(); });
+      modes.appendChild(b);
+    });
+
+    var chips = $("#chips"); chips.innerHTML = "";
+    var list = curList();
+    if (!list.words.length){
+      chips.innerHTML = '<span class="plabel">No words yet. Add some below.</span>';
+    }
+    list.words.forEach(function(x){
+      var m = mastery(x.w);
+      var c = document.createElement("span");
+      c.className = "chip m" + m;
+      c.innerHTML = esc(x.w) + ' <i aria-label="' + m + ' of 3">' + "●".repeat(m) + "○".repeat(3 - m) + '</i>';
+      chips.appendChild(c);
+    });
+  }
+
+  /* ---------- round state ---------- */
+  var R = null;
+  var placed = [], tiles = [];
+
+  function pickWords(list){
+    var fresh = [], done = [];
+    list.words.forEach(function(x){ (mastery(x.w) >= 3 ? done : fresh).push(x); });
+    return shuffle(shuffle(fresh).concat(shuffle(done)).slice(0, 10));
+  }
+
+  function startRound(words, mode){
+    R = { mode: mode, queue: words.slice(), idx: 0, total: words.length, first: 0, stars: 0, streak: 0,
+          missed: [], phase: "answer", hint: false, pat: "", newMastered: 0, rank0: rankIdx(stats.stars) };
+    show("play");
+    showWord();
+  }
+
+  function missingPattern(w){
+    var n = w.length;
+    var count = Math.max(1, Math.round(n * 0.4));
+    var idxs = [];
+    for (var i = 1; i < n; i++) idxs.push(i);
+    var hide = shuffle(idxs).slice(0, count);
+    return w.split("").map(function(ch, i){ return hide.indexOf(i) >= 0 ? "_" : ch; }).join(" ");
+  }
+
+  function showWord(){
+    var cur = R.queue[R.idx];
+    var retry = R.idx >= R.total;
+    R.phase = "answer"; R.hint = false;
+    R.pat = missingPattern(cur.w);
+
+    $("#pLabel").textContent = retry ? "Bonus round: lock in a word you missed" : "Word " + (R.idx + 1) + " of " + R.total;
+    $("#bar").style.width = (R.idx / R.queue.length * 100) + "%";
+    $("#pStars").textContent = R.stars;
+    $("#fb").className = "fb"; $("#fb").innerHTML = "";
+    $("#nextBtn").hidden = true; $("#checkBtn").hidden = false; $("#hintBtn").hidden = false;
+    $("#hintLine").textContent = "";
+    $("#sentBtn").hidden = !cur.s;
+    $("#hearBtn").hidden = !synth; $("#slowBtn").hidden = !synth; if (!synth) $("#sentBtn").hidden = true;
+
+    if (cur.s){
+      var re = new RegExp(reEsc(cur.w), "i");
+      $("#clue").innerHTML = esc(cur.s).replace(re, '<span class="blank"></span>');
+    } else {
+      $("#clue").textContent = synth ? "" : "Audio isn’t available in this browser, so use the hint and the letters to work it out.";
+    }
+    setAreas();
+    if (synth) { sayWord(0.85); }
+  }
+
+  function setAreas(){
+    var cur = R.queue[R.idx];
+    var useTiles = (R.mode === "tiles" && R.phase === "answer");
+    $("#tileArea").hidden = !useTiles;
+    $("#typeArea").hidden = useTiles;
+    var showPat = (R.mode === "missing" && R.phase === "answer");
+    $("#pattern").hidden = !showPat;
+    if (showPat) $("#pattern").textContent = R.pat;
+    if (useTiles){ buildTiles(cur.w); }
+    else { $("#ans").value = ""; $("#ans").focus(); }
+  }
+
+  /* ---------- tiles ---------- */
+  function buildTiles(word){
+    var letters = word.split("").map(function(ch, i){ return { ch: ch.toLowerCase(), id: i }; });
+    var sh, tries = 0;
+    do { sh = shuffle(letters); tries++; } while (sh.map(function(t){ return t.ch; }).join("") === word.toLowerCase() && tries < 12);
+    tiles = sh; placed = [];
+    renderTiles();
+  }
+  function renderTiles(){
+    var n = R.queue[R.idx].w.length;
+    var slots = $("#slots"); slots.innerHTML = "";
+    for (var i = 0; i < n; i++){
+      var d = document.createElement("div");
+      d.className = "slot"; d.textContent = placed[i] ? placed[i].ch : "";
+      slots.appendChild(d);
+    }
+    var pool = $("#pool"); pool.innerHTML = "";
+    tiles.forEach(function(t){
+      var used = placed.indexOf(t) >= 0;
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tile" + (used ? " used" : "");
+      b.textContent = t.ch; b.disabled = used;
+      b.setAttribute("aria-label", "letter " + t.ch);
+      b.addEventListener("click", function(){ placeTile(t); });
+      pool.appendChild(b);
+    });
+  }
+  function placeTile(t){
+    if (R.phase !== "answer" || R.mode !== "tiles") return;
+    if (placed.indexOf(t) >= 0 || placed.length >= tiles.length) return;
+    placed.push(t); renderTiles();
+  }
+
+  /* ---------- diff of what they wrote vs the right spelling ---------- */
+  function lcs(a, b){
+    var n = a.length, m = b.length, i, j, dp = [];
+    for (i = 0; i <= n; i++){ dp.push(new Array(m + 1).fill(0)); }
+    for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
+      dp[i][j] = a[i] === b[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+    var ak = new Array(n).fill(false), bk = new Array(m).fill(false);
+    i = 0; j = 0;
+    while (i < n && j < m){
+      if (a[i] === b[j]){ ak[i] = bk[j] = true; i++; j++; }
+      else if (dp[i+1][j] >= dp[i][j+1]) i++; else j++;
+    }
+    return { ak: ak, bk: bk };
+  }
+  function lettersRow(label, str, keep, cls){
+    var row = document.createElement("div"); row.className = "word-row";
+    var lab = document.createElement("span"); lab.className = "lab"; lab.textContent = label;
+    var L = document.createElement("span"); L.className = "letters";
+    str.split("").forEach(function(ch, i){
+      var s = document.createElement("span");
+      s.textContent = ch;
+      if (!keep[i]) s.className = cls;
+      L.appendChild(s);
+    });
+    row.appendChild(lab); row.appendChild(L);
+    return row;
+  }
+
+  /* ---------- checking ---------- */
+  function getAnswer(){
+    if (R.mode === "tiles" && R.phase === "answer") return placed.map(function(t){ return t.ch; }).join("");
+    return $("#ans").value;
+  }
+
+  function nudge(text){
+    var fb = $("#fb");
+    fb.className = "fb"; fb.innerHTML = '<div class="plabel">' + esc(text) + '</div>';
+    var board = $("#board"); board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake");
+  }
+
+  function check(){
+    if (!R || R.phase === "done") return;
+    var cur = R.queue[R.idx];
+    var ans = getAnswer();
+    if (!ans.trim()){ nudge(R.mode === "tiles" && R.phase === "answer" ? "Tap the letters to build the word." : "Type the word first."); return; }
+    if (R.mode === "tiles" && R.phase === "answer" && placed.length < cur.w.length){ nudge("Use all " + cur.w.length + " letters."); return; }
+
+    var ok = norm(ans) === norm(cur.w);
+    var retry = R.idx >= R.total;
+    var key_ = key(cur.w);
+    var p = progress[key_] || (progress[key_] = { c: 0 });
+
+    if (ok){
+      var title = pickOne(["Well played!", "By the gods!", "Nailed it!", "Heroic!"]);
+      var msg = "";
+      if (R.phase === "answer"){
+        if (!retry){
+          R.first++; R.streak++; logEvent(cur, true);
+          if (R.streak > stats.best) stats.best = R.streak;
+          var pts = R.hint ? 2 : 3;
+          R.stars += pts; stats.stars += pts;
+          p.c = (p.c || 0) + 1;
+          if (p.c === 3) R.newMastered++;
+          msg = "+" + pts + " stars" + (R.streak >= 3 ? " · " + R.streak + " in a row" : "");
+        } else {
+          p.c = Math.max(p.c || 0, 1);
+          title = "Locked in!"; msg = "That word is easier now.";
+        }
+      } else {
+        title = "Locked in!"; msg = "Now you’ve typed it the right way.";
+      }
+      saveAll();
+      tone([660, 880]);
+      var sentHtml = cur.s ? esc(cur.s).replace(new RegExp(reEsc(cur.w), "i"), function(m){ return "<b>" + m + "</b>"; }) : "";
+      $("#fb").className = "fb good";
+      $("#fb").innerHTML = '<div class="fbTitle">' + title + '</div><div>' + esc(msg) + '</div>' + (sentHtml ? '<div class="sent">' + sentHtml + '</div>' : "");
+      R.phase = "done";
+      finishCard();
+    } else {
+      tone([300, 240]);
+      if (R.phase === "answer"){
+        if (!retry){
+          p.c = 0; R.streak = 0; logEvent(cur, false);
+          if (R.missed.indexOf(cur) < 0) R.missed.push(cur);
+          R.queue.push(cur);
+          saveAll();
+        }
+        R.phase = "copy";
+        var fb = $("#fb");
+        fb.className = "fb bad"; fb.innerHTML = "";
+        var t = document.createElement("div"); t.className = "fbTitle"; t.textContent = "Not quite. Here’s the difference.";
+        fb.appendChild(t);
+        var d = lcs(ans.toLowerCase(), cur.w.toLowerCase());
+        fb.appendChild(lettersRow("You wrote", ans, d.ak, "off"));
+        fb.appendChild(lettersRow("Correct", cur.w, d.bk, "fix"));
+        var row = document.createElement("div"); row.className = "row";
+        var sp = document.createElement("button"); sp.type = "button"; sp.className = "btn alt small"; sp.textContent = "Hear it spelled out";
+        sp.addEventListener("click", function(){ spellOut(cur.w); });
+        row.appendChild(sp); fb.appendChild(row);
+        var ch = document.createElement("div"); ch.className = "copyhint"; ch.textContent = "Type it the right way to lock it in.";
+        fb.appendChild(ch);
+        $("#hintBtn").hidden = true;
+        setAreas();
+        spellOut(cur.w);
+      } else {
+        nudge("Look at the correct spelling above and try again.");
+        $("#ans").select();
+      }
+    }
+    $("#pStars").textContent = R.stars;
+  }
+
+  function finishCard(){
+    $("#checkBtn").hidden = true; $("#hintBtn").hidden = true; $("#nextBtn").hidden = false;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  function next(){
+    R.idx++;
+    if (R.idx >= R.queue.length){ endRound(); } else { showWord(); }
+  }
+
+  function hint(){
+    var w = R.queue[R.idx].w;
+    R.hint = true;
+    $("#hintLine").textContent = "Starts with “" + w[0].toLowerCase() + "” and has " + w.length + " letters.";
+  }
+
+  /* ---------- end of round ---------- */
+  function endRound(){
+    saveAll();
+    var ratio = R.first / R.total;
+    $("#dTitle").textContent = ratio === 1 ? "Flawless victory!" : ratio >= 0.7 ? "A hero’s round!" : "Every hero trains.";
+    $("#dScore").textContent = R.first + " of " + R.total;
+    var sub = "right on the first try · " + R.stars + " stars earned";
+    if (R.newMastered) sub += " · " + R.newMastered + " new mastered word" + (R.newMastered > 1 ? "s" : "");
+    $("#dSub").textContent = sub;
+    var tn = (dayStats(allEvents())[dkey(new Date())] || { n: 0 }).n;
+    $("#dToday").textContent = tn >= goals.daily ? "Today’s goal is done: " + tn + " words." : tn + " of " + goals.daily + " words toward today’s goal.";
+
+    var box = $("#missedBox"), list = $("#missedList");
+    list.innerHTML = "";
+    box.hidden = !R.missed.length; $("#missedBtn").hidden = !R.missed.length;
+    R.missed.forEach(function(x){
+      var d = document.createElement("div"); d.className = "m";
+      var L = document.createElement("span"); L.className = "letters"; L.textContent = x.w;
+      d.appendChild(L);
+      if (synth){
+        var b = document.createElement("button"); b.type = "button"; b.className = "btn alt small"; b.textContent = "Hear it";
+        b.addEventListener("click", function(){ spellOut(x.w); });
+        d.appendChild(b);
+      }
+      list.appendChild(d);
+    });
+    var ri = rankIdx(stats.stars), up = $("#dRank");
+    if (ri > R.rank0){ up.textContent = "New rank: " + RANKS[ri][0] + "!"; up.hidden = false; }
+    else up.hidden = true;
+    tone(ratio >= 0.7 ? [523, 659, 784] : [440, 523]);
+    show("done");
+  }
+
+  /* ---------- custom words ---------- */
+  function parseCustom(text){
+    var out = [], seen = {};
+    text.split(/\n+/).forEach(function(line){
+      var parts = line.split("|");
+      var w = (parts.shift() || "").trim();
+      if (!/^[A-Za-z][A-Za-z'’-]*$/.test(w)) return;
+      var k = w.toLowerCase(); if (seen[k]) return; seen[k] = 1;
+      out.push({ w: w.replace(/’/g, "'"), s: parts.join("|").trim() });
+    });
+    return out;
+  }
+  function fillCustomBox(){
+    $("#customText").value = custom.map(function(x){ return x.s ? x.w + " | " + x.s : x.w; }).join("\n");
+  }
+
+  /* ---------- events ---------- */
+  $("#startBtn").addEventListener("click", function(){
+    var l = curList();
+    if (!l.words.length){
+      $("#startMsg").textContent = "This list is empty. Add words in “Add your own words” below.";
+      $("#customBox").open = true; return;
+    }
+    startRound(pickWords(l), sel.mode);
+  });
+  $("#hearBtn").addEventListener("click", function(){ sayWord(0.85); });
+  $("#slowBtn").addEventListener("click", function(){ sayWord(0.5); });
+  $("#sentBtn").addEventListener("click", saySentence);
+  $("#checkBtn").addEventListener("click", check);
+  $("#nextBtn").addEventListener("click", next);
+  $("#hintBtn").addEventListener("click", hint);
+  $("#undoBtn").addEventListener("click", function(){ if (R.phase === "answer"){ placed.pop(); renderTiles(); } });
+  $("#clearBtn").addEventListener("click", function(){ if (R.phase === "answer"){ placed = []; renderTiles(); } });
+  $("#backBtn").addEventListener("click", function(){ if (synth) { try { synth.cancel(); } catch(e){} } renderHome(); show("home"); });
+  $("#againBtn").addEventListener("click", function(){ startRound(pickWords(curList()), sel.mode); });
+  $("#missedBtn").addEventListener("click", function(){ startRound(shuffle(R.missed), R.mode); });
+  $("#homeBtn").addEventListener("click", function(){ renderHome(); show("home"); });
+  $("#soundBtn").addEventListener("click", function(){ stats.sound = (stats.sound === false); saveAll(); renderHome(); });
+
+  $("#saveCustom").addEventListener("click", function(){
+    custom = parseCustom($("#customText").value);
+    store.set("spell:custom", custom);
+    $("#customMsg").textContent = custom.length ? "Saved " + custom.length + " word" + (custom.length > 1 ? "s" : "") + "." : "No words found. Type one word per line.";
+    if (custom.length) sel.list = "mine";
+    renderHome();
+  });
+
+  var resetArmed = false;
+  $("#resetBtn").addEventListener("click", function(){
+    if (!resetArmed){ resetArmed = true; this.textContent = "Tap again to erase stars and word mastery"; return; }
+    progress = {}; stats = { stars: 0, best: 0, sound: stats.sound !== false };
+    saveAll(); resetArmed = false; this.textContent = "Reset stars and word mastery"; renderHome();
+    $("#setMsg").textContent = "Stars and mastery were reset. The practice log is untouched.";
+  });
+
+  /* parent view wiring */
+  function enterParent(){
+    parentOpen = true; weekOff = 0; syncFailed = false;
+    show("parent"); renderParent(); flush(); loadRemote();
+  }
+  function leaveParent(){ parentOpen = false; renderHome(); show("home"); }
+  $("#parentBtn").addEventListener("click", function(){
+    if (pin){ $("#pinIn").value = ""; $("#pinMsg").textContent = ""; show("gate"); $("#pinIn").focus(); }
+    else enterParent();
+  });
+  function tryPin(){
+    if ($("#pinIn").value === pin) enterParent();
+    else { $("#pinMsg").textContent = "That PIN doesn’t match."; $("#pinIn").select(); }
+  }
+  $("#pinGo").addEventListener("click", tryPin);
+  $("#pinIn").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); tryPin(); } });
+  $("#pinBack").addEventListener("click", function(){ renderHome(); show("home"); });
+  $("#pBack").addEventListener("click", leaveParent);
+  $("#pRefresh").addEventListener("click", function(){ syncFailed = false; syncCode = ""; flush(); loadRemote(); renderParent(); });
+  $("#wPrev").addEventListener("click", function(){ weekOff--; renderParent(); });
+  $("#wNext").addEventListener("click", function(){ if (weekOff < 0){ weekOff++; renderParent(); } });
+  $("#wNow").addEventListener("click", function(){ weekOff = 0; renderParent(); });
+
+  [5, 10, 15, 20, 25, 30].forEach(function(n){ var o = document.createElement("option"); o.value = String(n); o.textContent = n + " words"; $("#goalDaily").appendChild(o); });
+  [1, 2, 3, 4, 5, 6, 7].forEach(function(n){ var o = document.createElement("option"); o.value = String(n); o.textContent = n + (n === 1 ? " day" : " days"); $("#goalWeekly").appendChild(o); });
+  $("#goalDaily").addEventListener("change", function(){ goals.daily = +this.value; saveGoals(); renderParent(); });
+  $("#goalWeekly").addEventListener("change", function(){ goals.weekly = +this.value; saveGoals(); renderParent(); });
+
+  $("#pinSave").addEventListener("click", function(){
+    var v = $("#pinNew").value;
+    if (!/^\d{4}$/.test(v)){ $("#setMsg").textContent = "Use exactly 4 digits."; return; }
+    pin = v; store.set("spell:pin", pin); $("#pinNew").value = ""; $("#setMsg").textContent = "PIN saved on this device.";
+  });
+  $("#pinClear").addEventListener("click", function(){
+    pin = ""; store.set("spell:pin", ""); $("#pinNew").value = ""; $("#setMsg").textContent = "PIN removed.";
+  });
+  function saveFile(name, text, mime){
+    if (DL) return DL.save({ filename: name, data: text });
+    return new Promise(function(res, rej){
+      try {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+        a.download = name; document.body.appendChild(a); a.click();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        res();
+      } catch(e){ rej(e); }
+    });
+  }
+  function saveFail(err){
+    $("#setMsg").textContent = (err && err.code === "declined") ? "Download canceled." : "Couldn’t save the file here.";
+  }
+  $("#csvBtn").addEventListener("click", function(){
+    saveFile("spelling-log.csv", csvText(), "text/csv").then(function(){ $("#setMsg").textContent = "Log saved."; }, saveFail);
+  });
+  function backupObj(){
+    return { app: "spelling-quest", v: 1, saved: new Date().toISOString(), events: allEvents(), progress: progress, stats: stats, custom: custom, goals: goals };
+  }
+  $("#backupBtn").addEventListener("click", function(){
+    saveFile("spelling-quest-backup-" + dkey(new Date()) + ".json", JSON.stringify(backupObj()), "application/json").then(function(){
+      store.set("spell:lastBackup", Date.now()); $("#setMsg").textContent = "Backup saved."; renderParent();
+    }, saveFail);
+  });
+  function restoreObj(o){
+    if (!o || o.app !== "spelling-quest") throw new Error("not a backup");
+    var have = {}, added = 0;
+    events.forEach(function(e){ have[e.id] = 1; });
+    (o.events || []).forEach(function(e){
+      if (e && e.id && e.w && e.d && e.t && !have[e.id]){ e.dev = e.dev || "x"; events.push(e); have[e.id] = 1; added++; }
+    });
+    events.sort(function(a, b){ return a.t - b.t; });
+    store.set("spell:events", events);
+    Object.keys(o.progress || {}).forEach(function(k){
+      var c = (o.progress[k] || {}).c || 0;
+      if (!progress[k] || progress[k].c < c) progress[k] = { c: c };
+    });
+    if (o.stats){ stats.stars = Math.max(stats.stars || 0, o.stats.stars || 0); stats.best = Math.max(stats.best || 0, o.stats.best || 0); }
+    if (!custom.length && o.custom && o.custom.length){ custom = o.custom; store.set("spell:custom", custom); }
+    if (o.goals && o.goals.daily && o.goals.weekly){ goals = { daily: o.goals.daily, weekly: o.goals.weekly }; store.set("spell:goals", goals); }
+    saveAll();
+    return added;
+  }
+  $("#restoreBtn").addEventListener("click", function(){ $("#restoreFile").click(); });
+  $("#restoreFile").addEventListener("change", function(){
+    var f = this.files && this.files[0], input = this;
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      try {
+        var n = restoreObj(JSON.parse(rd.result));
+        renderHome(); renderParent();
+        $("#setMsg").textContent = "Backup restored. " + n + " practice entries added.";
+      } catch(e){ $("#setMsg").textContent = "That file isn’t a Spelling Quest backup."; }
+      input.value = "";
+    };
+    rd.onerror = function(){ $("#setMsg").textContent = "Couldn’t read that file."; input.value = ""; };
+    rd.readAsText(f);
+  });
+
+  document.addEventListener("keydown", function(e){
+    if ($("#play").hidden || !R) return;
+    var tag = e.target && e.target.tagName;
+    if (e.key === "Enter"){
+      if (tag === "BUTTON") return;
+      e.preventDefault();
+      if (!$("#nextBtn").hidden) next(); else check();
+      return;
+    }
+    if (R.mode === "tiles" && R.phase === "answer" && tag !== "INPUT" && tag !== "TEXTAREA"){
+      if (e.key === "Backspace"){ placed.pop(); renderTiles(); return; }
+      if (/^[a-zA-Z'’-]$/.test(e.key)){
+        var ch = e.key.toLowerCase().replace("’", "'");
+        var t = tiles.filter(function(x){ return x.ch === ch && placed.indexOf(x) < 0; })[0];
+        if (t) placeTile(t);
+      }
+    }
+  });
+
+  /* optional capabilities: each resolves null when this view can't run it */
+  (function initCaps(){
+    try {
+      if (!(window.claude && typeof window.claude.use === "function")) return;
+      window.claude.use("downloads").then(function(d){ DL = d; }, function(){});
+      window.claude.use("db").then(function(db){
+        if (!db) return;
+        DB = db;
+        var cnt = {};
+        events.forEach(function(e){ if (e.dev === device) cnt[e.d] = (cnt[e.d] || 0) + 1; });
+        Object.keys(cnt).forEach(function(d){ if (cnt[d] > (synced[d] || 0)) syncDirty[d] = 1; });
+        flush(); loadRemote(); loadSettings();
+      }, function(){});
+    } catch(e){}
+  })();
+
+  renderHome();
+})();
+</script>
+</body>
+</html>
